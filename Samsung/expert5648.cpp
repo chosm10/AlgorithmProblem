@@ -1,137 +1,80 @@
 #include<iostream>
-#include<stack>
-#include<queue>
 #include<vector>
-#include<cmath>
-
+#include<queue>
+#define MAX 4004
 using namespace std;
 int N;
+int dy[4] = { 1, -1, 0, 0 };
+int dx[4] = { 0, 0, -1, 1 };
+int board[MAX][MAX];
+int time_limit;
 struct atom {
-	double x, y;
-	int d, k;
-};
-double can_meet(atom a, atom b) {
+	int x, y, d, k;
+}v[101];
+bool check[101];
 
-	if (a.x == b.x) {
-		if (a.y > b.y) {
-			if (a.d == 1 && b.d == 0) {
-				return (a.y - b.y) / 2;
-			}
-		}
-		else {
-			if (a.d == 0 && b.d == 1) {
-				return (b.y - a.y) / 2;
-			}
-		}
-	}
-	else if (a.y == b.y) {
-		if (a.x > b.x) {
-			if (a.d == 2 && b.d == 3) {
-				return (a.x - b.x) / 2;
-			}
-		}
-		else {
-			if (a.d == 3 && b.d == 2) {
-				return (b.x - a.x) / 2;
-			}
-		}
-	}
-
-	if (abs(a.x - b.x) == abs(a.y - b.y)) {
-		if (a.x > b.x) {
-			if (a.y > b.y) {
-				if ((a.d == 1 && b.d == 3) || (a.d == 2 && b.d == 0)) {
-					return (a.x - b.x);
-				}
-			}
-			else {
-				if ((a.d == 0 && b.d == 3) || (a.d == 2 && b.d == 1)) {
-					return (a.x - b.x);
-				}
-			}
-		}
-		else {
-			if (a.y > b.y) {
-				if ((a.d == 3 && b.d == 0) || (a.d == 1 && b.d == 2)) {
-					return (b.x - a.x);
-				}
-			}
-			else {
-				if ((a.d == 3 && b.d == 1) || (a.d == 0 || b.d == 2)) {
-					return (b.x - a.x);
-				}
-			}
-		}
-	}
-
-	return 2004;
-}
-struct cmp {
-	bool operator() (atom a, atom b) {
-		return (a.x*a.x + a.y*a.y) > (b.x*b.x + b.y*b.y);
-	}
-};
-int main(void) {
-
+int q[101];
+int main(int argc, char** argv)
+{
 	int test_case, T;
 	cin >> T;
-	priority_queue<atom, vector<atom>, cmp> q;
-	queue<atom> tmp_q;
-	double x, y;
+
+	int x, y;
 	int d, k;
-	atom tmp1;
-	atom tmp2;
-	int qsize = 0;
-	stack<atom> s;
-	double sec;
-	long long sum;
+
 	for (test_case = 1; test_case <= T; ++test_case)
 	{
 		cin >> N;
-
+		for (int i = 0; i < 101; i++) {
+			check[i] = true;
+			v[i] = { 0,0,0,0 };
+			q[i] = 0;
+		}
 		for (int i = 0; i < N; i++) {
 			cin >> x >> y >> d >> k;
-			tmp1 = { x, y, d, k };
-			q.push(tmp1);
+			v[i] = { (x + 1000) * 2, (y + 1000) * 2, d, k };
 		}
-		sum = 0;
-
-		while (!q.empty()) {
-			tmp1 = q.top();
-			q.pop();
-			qsize = q.size();
-			sec = 2001;
-			for (int i = 0; i < qsize; i++) {
-				tmp2 = q.top();
-				q.pop();
-				if (sec > can_meet(tmp1, tmp2)) {
-					sec = can_meet(tmp1, tmp2);
-					while (!s.empty()) {
-						tmp_q.push(s.top());
-						s.pop();
-					}
-					s.push(tmp2);
-				}
-				else if (sec == can_meet(tmp1, tmp2)) {
-					s.push(tmp2);
-				}
-				else {
-					tmp_q.push(tmp2);
-				}
-			}
-			if (!s.empty()) {
-				sum += tmp1.k;
-			}
-			while (!s.empty()) {
-				sum += s.top().k;
-				s.pop();
-			}
-			while (!tmp_q.empty()) {
-				q.push(tmp_q.front());
-				tmp_q.pop();
+		for (int i = 0; i < MAX; i++) {
+			for (int j = 0; j < MAX; j++) {
+				board[i][j] = 0;
 			}
 		}
-
+		time_limit = 4004;
+		int sum = 0;
+		int count = N;
+		while (time_limit--) {
+			if (count == 0)
+				break;
+			for (int i = 0; i < N; i++) {
+				if (!check[i])
+					continue;
+				x = v[i].x; y = v[i].y;
+				x += dx[v[i].d]; y += dy[v[i].d];
+				if (x < 0 || x >= 4001 || y < 0 || y >= 4001) {
+					count--;
+					check[i] = false;
+					board[v[i].y][v[i].x] -= 1;
+					continue;
+				}
+				board[y][x] += 1;
+				board[v[i].y][v[i].x] -= 1;
+				v[i].x = x; v[i].y = y;
+			}
+			int index = 0;
+			for (int i = 0; i < N; i++) {
+				if (!check[i])
+					continue;
+				if (board[v[i].y][v[i].x] >= 2) {
+					count--;
+					sum += v[i].k;
+					q[index++] = i;
+					check[i] = false;
+				}
+			}
+			for (int i = 0; i < index; i++) {
+				board[v[q[i]].y][v[q[i]].x] = 0;
+			}
+		}
 		cout << "#" << test_case << " " << sum << "\n";
 	}
 	return 0;

@@ -1,58 +1,67 @@
 #include<iostream>
+#include<map>
 #include<queue>
-#include<string>
 using namespace std;
-int dx[4] = { -1, 1, 0, 0 };
-int dy[4] = { 0, 0, -1, 1 };
-int n, m;
-int main(void) {
-	cout << "Hello";
-
-	cin >> n >> m;
-	char map[1001][1001];
-	bool check[1001][1001];
-	pair<pair<int, int>, pair<int, int>> home; // x, y, cnt, used
-	string tmp;
-	for (int i = 0; i < n; i++) {
-		cin >> tmp;
-		for (int j = 0; j < m; j++) {
-			tmp[j] = map[i][j];
-			check[i][j] = false;
+int N;
+int dy[4] = { 1, -1, 0, 0 };
+int dx[4] = { 0, 0, -1, 1 };
+int time_limit;
+struct atom {
+	int x, y, d, k;
+};
+int main(int argc, char** argv)
+{
+	int test_case, T;
+	cin >> T;
+	queue<atom> q;
+	pair<int, int> p;
+	map<pair<int, int>, pair<int, int>> m_copy;
+	map<pair<int, int>, pair<int, int>> ::iterator iter;
+	int x, y;
+	int d, k;
+	for (test_case = 1; test_case <= T; ++test_case)
+	{
+		cin >> N;
+		m_copy.clear();
+		for (int i = 0; i < N; i++) {
+			cin >> x >> y >> d >> k;
+			q.push({ x * 2, y * 2, d, k });
 		}
-	}
-
-	queue<pair<pair<int, int>, pair<int, int>>> q;
-	home = make_pair(make_pair(0, 0), make_pair(0, 0));
-	q.push(home);
-	check[home.first.second][home.first.first] = true;
-	int px, py, nx, ny, cnt, used;  // used가 0이면 장애물 pass가능
-	while (!q.empty()) {
-		px = q.front().first.first; py = q.front().first.second;
-		cnt = q.front().second.first; used = q.front().second.second;
-		if (px == m - 1 && py == n - 1) {
-			cout << cnt << "\n";
-			return 0;
-		}
-		q.pop();
-		for (int i = 0; i < 4; i++) {
-			nx = px + dx[i]; ny = py + dy[i];
-			if (nx < 0 || nx >= m || ny < 0 || ny >= n) {
-				continue;
-			}
-			if (!check[ny][nx] && map[ny][nx] != 'M') {
-				if (map[ny][nx] == 'R') {
-					check[ny][nx] = true;
-					q.push(make_pair(make_pair(nx, ny), make_pair(cnt + 1, used)));
+		time_limit = 4004;
+		int sum = 0;
+		atom tmp;
+		while (time_limit--) {
+			while (!q.empty()) {
+				tmp = q.front();
+				q.pop();
+				x = tmp.x; y = tmp.y; d = tmp.d; k = tmp.k;
+				x += dx[d]; y += dy[d];
+				p = make_pair(x, y);
+				if (m_copy.find(p) == m_copy.end()) {
+					m_copy[p] = { d, k };
 				}
-				else if (map[ny][nx] == 'H') {
-					if (used == 0) {
-						check[ny][nx] = true;
-						q.push(make_pair(make_pair(nx, ny), make_pair(cnt + 1, 1)));
+				else {
+					if (m_copy[p].second > 0) {
+						m_copy[p].second = -m_copy[p].second - k;
+					}
+					else {
+						m_copy[p].second -= k;
 					}
 				}
 			}
+			for (iter = m_copy.begin(); iter != m_copy.end(); iter++) {
+				x = iter->first.first; y = iter->first.second; d = iter->second.first; k = iter->second.second;
+				if (k < 0) {
+					sum -= k;
+				}
+				else {
+					q.push({ x, y, d, k });
+				}
+			}
+			m_copy.clear();
 		}
+
+		cout << "#" << test_case << " " << sum << "\n";
 	}
-	cout << "-1\n";
 	return 0;
 }
